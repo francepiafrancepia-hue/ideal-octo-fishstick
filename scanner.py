@@ -3,13 +3,15 @@ import json
 import math
 import statistics
 import sys
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
 BASE_URL = "https://api.coingecko.com/api/v3"
 EXCLUSION_SYMBOLS = {"usdt", "usdc", "fdusd", "dai", "weth", "wbtc"}
+PROBABILITY_CAP = 90
+PROBABILITY_BASE = 50
+PROBABILITY_WEIGHT = 10
 
 
 def _fetch_json(path: str, params: dict | None = None) -> dict:
@@ -109,7 +111,8 @@ def select_high_conviction(candidates: list[dict], btc_change: float | None) -> 
         if btc_change is not None and asset.get("change_24h") is not None:
             if asset["change_24h"] > btc_change:
                 score += 0.5
-        if asset.get("change_24h") and abs(asset["change_24h"]) >= 5:
+        change = asset.get("change_24h")
+        if change is not None and abs(change) >= 5:
             score += 1.0
         asset["score"] = score
         scored.append(asset)
@@ -189,7 +192,7 @@ def render_candidates(candidates: list[dict], btc_change: float | None) -> str:
         price = asset["price"]
         bull_target = price * 1.05
         bear_invalidation = asset["ma20"] if asset["ma20"] else price * 0.97
-        probability = min(90, 50 + int(asset.get("score", 0) * 10))
+        probability = min(PROBABILITY_CAP, PROBABILITY_BASE + int(asset.get("score", 0) * PROBABILITY_WEIGHT))
         narrative = []
         if asset.get("above_ma"):
             narrative.append("holding above MA20")
@@ -253,7 +256,7 @@ def build_report() -> str:
     ]
 
     dominance_hint = "Alts gaining traction" if any(
-        (a.get("relative_strength") for a in non_excluded)
+        a.get("relative_strength") for a in non_excluded
     ) else "BTC retaining dominance"
 
     fear_greed = fetch_fear_greed()
