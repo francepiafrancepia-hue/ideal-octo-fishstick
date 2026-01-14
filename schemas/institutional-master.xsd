@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:inst="http://institution.example.org/master"
+           targetNamespace="http://institution.example.org/master"
+           elementFormDefault="qualified">
+    
+    <xs:annotation>
+        <xs:documentation>
+            Institutional Master Record Schema
+            This schema defines the master record format for institutional data.
+            All source formats should be transformed to this master format.
+        </xs:documentation>
+    </xs:annotation>
+    
+    <!-- Root element -->
+    <xs:element name="InstitutionalRecord" type="inst:InstitutionalRecordType"/>
+    
+    <!-- Main record type -->
+    <xs:complexType name="InstitutionalRecordType">
+        <xs:sequence>
+            <xs:element name="Metadata" type="inst:MetadataType"/>
+            <xs:element name="Entity" type="inst:EntityType"/>
+            <xs:element name="Traceability" type="inst:TraceabilityType" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="version" type="xs:string" use="required"/>
+        <xs:attribute name="recordId" type="xs:string" use="required"/>
+    </xs:complexType>
+    
+    <!-- Metadata type -->
+    <xs:complexType name="MetadataType">
+        <xs:sequence>
+            <xs:element name="CreatedDate" type="xs:dateTime"/>
+            <xs:element name="ModifiedDate" type="xs:dateTime"/>
+            <xs:element name="Source" type="xs:string"/>
+            <xs:element name="TransformationRef" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <!-- Entity type -->
+    <xs:complexType name="EntityType">
+        <xs:sequence>
+            <xs:element name="Identifier" type="inst:IdentifierType"/>
+            <xs:element name="Name" type="inst:NameType"/>
+            <xs:element name="Description" type="xs:string" minOccurs="0"/>
+            <xs:element name="Attributes" type="inst:AttributesType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <!-- Identifier type -->
+    <xs:complexType name="IdentifierType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="type" type="xs:string" use="required"/>
+                <xs:attribute name="sourceId" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Original identifier from source system for traceability</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    
+    <!-- Name type -->
+    <xs:complexType name="NameType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="sourceName" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Original name from source system for traceability</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    
+    <!-- Attributes type -->
+    <xs:complexType name="AttributesType">
+        <xs:sequence>
+            <xs:element name="Attribute" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                            <xs:attribute name="name" type="xs:string" use="required"/>
+                            <xs:attribute name="sourceField" type="xs:string" use="optional">
+                                <xs:annotation>
+                                    <xs:documentation>Source field name for bidirectional traceability</xs:documentation>
+                                </xs:annotation>
+                            </xs:attribute>
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <!-- Traceability type for bidirectional mapping -->
+    <xs:complexType name="TraceabilityType">
+        <xs:sequence>
+            <xs:element name="SourceMapping" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="institutionalElement" type="xs:string" use="required"/>
+                    <xs:attribute name="sourceElement" type="xs:string" use="required"/>
+                    <xs:attribute name="transformationRule" type="xs:string" use="optional"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    
+</xs:schema>
