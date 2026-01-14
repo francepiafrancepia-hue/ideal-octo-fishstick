@@ -40,7 +40,7 @@ The system consists of:
 
 ### Prerequisites
 
-- XML processor with XSLT 2.0 support (e.g., `xsltproc`, Saxon)
+- XML processor with XSLT 1.0 support (e.g., `xsltproc`, Saxon)
 - XML validator (e.g., `xmllint`)
 
 ### Transform Source to Institutional Format
