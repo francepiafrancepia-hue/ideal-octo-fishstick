@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:src="http://legacy.example.org/source"
+           targetNamespace="http://legacy.example.org/source"
+           elementFormDefault="qualified">
+    
+    <xs:annotation>
+        <xs:documentation>
+            Legacy Source Record Schema
+            This schema represents the legacy/source format that will be transformed
+            to the institutional master record format.
+        </xs:documentation>
+    </xs:annotation>
+    
+    <!-- Root element -->
+    <xs:element name="SourceRecord" type="src:SourceRecordType"/>
+    
+    <!-- Main record type -->
+    <xs:complexType name="SourceRecordType">
+        <xs:sequence>
+            <xs:element name="RecordInfo" type="src:RecordInfoType"/>
+            <xs:element name="Item" type="src:ItemType"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+    </xs:complexType>
+    
+    <!-- Record info type -->
+    <xs:complexType name="RecordInfoType">
+        <xs:sequence>
+            <xs:element name="Created" type="xs:dateTime"/>
+            <xs:element name="Updated" type="xs:dateTime"/>
+            <xs:element name="Origin" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <!-- Item type -->
+    <xs:complexType name="ItemType">
+        <xs:sequence>
+            <xs:element name="ItemId" type="xs:string"/>
+            <xs:element name="Title" type="xs:string"/>
+            <xs:element name="Details" type="xs:string" minOccurs="0"/>
+            <xs:element name="Properties" type="src:PropertiesType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <!-- Properties type -->
+    <xs:complexType name="PropertiesType">
+        <xs:sequence>
+            <xs:element name="Property" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                            <xs:attribute name="key" type="xs:string" use="required"/>
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    
+</xs:schema>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<src:SourceRecord xmlns:src="http://legacy.example.org/source"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://legacy.example.org/source ../schemas/source-legacy.xsd"
+                  id="SRC-12345">
+    <src:RecordInfo>
+        <src:Created>2026-01-14T10:00:00Z</src:Created>
+        <src:Updated>2026-01-14T12:30:00Z</src:Updated>
+        <src:Origin>Legacy System v2.1</src:Origin>
+    </src:RecordInfo>
+    <src:Item>
+        <src:ItemId>ITEM-ABC-789</src:ItemId>
+        <src:Title>Sample Document Title</src:Title>
+        <src:Details>This is a detailed description of the sample document from the legacy system.</src:Details>
+        <src:Properties>
+            <src:Property key="category">Research</src:Property>
+            <src:Property key="status">Active</src:Property>
+            <src:Property key="priority">High</src:Property>
+        </src:Properties>
+    </src:Item>
+</src:SourceRecord>
