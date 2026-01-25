@@ -12,4 +12,3 @@ test('listSkillNames matches catalog entries', () => {
   const names = listSkillNames();
   assert.deepEqual(names, skillCatalog.map(skill => skill.name));
 });
-

@@ -22,12 +22,12 @@ server.registerTool(
   {
     title: 'Ollama generate',
     description: 'Generate a response from Ollama for a prompt.',
-    inputSchema: {
+    inputSchema: z.object({
       prompt: z.string().describe('Prompt to send to Ollama'),
       model: z.string().optional().describe('Optional model name'),
       system: z.string().optional().describe('Optional system prompt'),
       temperature: z.number().min(0).max(2).optional().describe('Sampling temperature override')
-    }
+    })
   },
   async ({ prompt, model, system, temperature }) => {
     const defaults = getDefaults();
@@ -54,7 +54,7 @@ server.registerTool(
   {
     title: 'Ollama list models',
     description: 'List available Ollama models.',
-    inputSchema: {}
+    inputSchema: z.object({})
   },
   async () => {
     const models = await listModels();
@@ -74,11 +74,11 @@ server.registerTool(
   {
     title: 'Agent skill',
     description: 'Run a curated agent skill using Ollama.',
-    inputSchema: {
+    inputSchema: z.object({
       skill: z.enum(listSkillNames()).describe('Skill to run'),
       input: z.string().describe('Input for the skill'),
       model: z.string().optional().describe('Optional model name override')
-    }
+    })
   },
   async ({ skill, input, model }) => {
     const prompt = buildPromptForSkill(skill, input);
@@ -103,7 +103,7 @@ server.registerTool(
   {
     title: 'List agent skills',
     description: 'List the available agent skills and their descriptions.',
-    inputSchema: {}
+    inputSchema: z.object({})
   },
   async () => {
     const lines = skillCatalog.map(skill => `${skill.name}: ${skill.description}`);
