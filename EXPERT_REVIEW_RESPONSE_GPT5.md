@@ -10,7 +10,7 @@
 
 ## 1) CRITICAL ERRORS (Production breakers)
 1. **No TLS + no service auth** → MITM/credential theft, data leakage.  
-2. **No DB backups / restore drills** → data loss неизбежен при incident.  
+2. **No DB backups / restore drills** → data loss неизбежна при incident.  
 3. **Single Postgres/Redis (no HA)** → downtime при node failure.  
 4. **No network policies / ingress protection** → lateral movement risk.  
 5. **Secrets only in .env** (dev OK, prod not) → exposure risk.  
