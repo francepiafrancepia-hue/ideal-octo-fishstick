@@ -97,3 +97,9 @@ node_modules/
 .gcp/
 secrets.json
 credentials.json
+
+# Agent working directories (keep .gitkeep, ignore content)
+INBOX_RAW/*
+!INBOX_RAW/.gitkeep
+EXPORT_TEXT/*
+!EXPORT_TEXT/.gitkeep
