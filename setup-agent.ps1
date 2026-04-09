@@ -159,10 +159,26 @@ if ($SkipConversion) {
 
             if ($ext -in ".docx", ".odt") {
                 if ($converter -eq "pandoc") {
-                    & pandoc $file.FullName -t markdown -o $out 2>$null
+                    $pandocErr = $null
+                    & pandoc $file.FullName -t markdown -o $out 2>&1 | ForEach-Object {
+                        if ($_ -is [System.Management.Automation.ErrorRecord]) { $pandocErr = $_.ToString() }
+                    }
+                    if ($pandocErr) {
+                        Write-Host "  ! Pandoc грешка за $($file.Name): $pandocErr" -ForegroundColor Red
+                        $skipped++
+                        continue
+                    }
                     $converted++
                 } elseif ($converter -eq "libreoffice") {
-                    & $sofficePath --headless --convert-to "txt:Text" --outdir $EXPORT $file.FullName 2>$null | Out-Null
+                    $loErr = $null
+                    & $sofficePath --headless --convert-to "txt:Text" --outdir $EXPORT $file.FullName 2>&1 | ForEach-Object {
+                        if ($_ -is [System.Management.Automation.ErrorRecord]) { $loErr = $_.ToString() }
+                    }
+                    if ($loErr) {
+                        Write-Host "  ! LibreOffice грешка за $($file.Name): $loErr" -ForegroundColor Red
+                        $skipped++
+                        continue
+                    }
                     $txtOut = Join-Path $EXPORT ($base + ".txt")
                     if (Test-Path $txtOut) {
                         Move-Item $txtOut $out -Force
@@ -183,10 +199,15 @@ if ($SkipConversion) {
 
             # Add SOURCE header
             if (Test-Path $out) {
-                $header = "# SOURCE_FILE: $($file.Name)`r`n# SOURCE_PATH: $($file.FullName)`r`n`r`n"
+                $nl = [System.Environment]::NewLine
+                $header = "# SOURCE_FILE: $($file.Name)${nl}# SOURCE_PATH: $($file.FullName)${nl}${nl}"
                 $content = Get-Content $out -Raw -ErrorAction SilentlyContinue
                 if ($null -eq $content) { $content = "" }
-                Set-Content -Path $out -Value ($header + $content) -Encoding UTF8
+                try {
+                    Set-Content -Path $out -Value ($header + $content) -Encoding UTF8 -ErrorAction Stop
+                } catch {
+                    Write-Host "  ! Грешка при запис на $out : $_" -ForegroundColor Red
+                }
             }
         }
 
