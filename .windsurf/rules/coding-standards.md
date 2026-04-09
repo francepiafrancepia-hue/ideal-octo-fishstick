@@ -14,7 +14,7 @@ description: Правила за кодиране — стил, формат и 
 
 <code_style>
 - Encoding: UTF-8 навсякъде
-- Нови редове: LF (Unix) за .md, .py; CRLF за .ps1
+- Нови редове: LF (Unix) за всички файлове (PowerShell 7+ поддържа LF на Windows)
 - Индентация: 4 spaces (без табулации)
 - Максимална дължина на ред: 120 символа
 - Кодови блокове: ВИНАГИ с language tag (```powershell, ```python, ```bash)
