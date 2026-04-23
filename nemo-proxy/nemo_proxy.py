@@ -29,7 +29,7 @@ _client: httpx.AsyncClient
 
 
 @asynccontextmanager
-async def lifespan(application: FastAPI):  # noqa: ARG001
+async def lifespan(_app: FastAPI):
     global _client  # noqa: PLW0603
     _client = httpx.AsyncClient(timeout=120.0)
     try:
@@ -96,7 +96,8 @@ async def _chat_nemo(payload: dict) -> JSONResponse:
             headers={"Content-Type": "application/json"},
         )
     except httpx.RequestError as exc:
-        raise HTTPException(status_code=502, detail=f"NeMo unreachable: {exc}") from exc
+        logger.error("NeMo connection error: %s", exc)
+        raise HTTPException(status_code=502, detail="Upstream guardrails service unavailable") from exc
 
     # Bug fix #2: propagate non-200 status codes; log details server-side only
     if resp.status_code != 200:
@@ -133,7 +134,8 @@ async def _stream_nemo(payload: dict) -> AsyncIterator[str]:
         ) as resp:
             if resp.status_code != 200:
                 error_body = await resp.aread()
-                yield f"data: {json.dumps({'error': error_body.decode()})}\n\n"
+                logger.error("NeMo stream error %d: %s", resp.status_code, error_body.decode())
+                yield 'data: {"error": "Upstream guardrails service error"}\n\n'
                 return
 
             async for line in resp.aiter_lines():
@@ -166,6 +168,7 @@ async def _stream_nemo(payload: dict) -> AsyncIterator[str]:
                 yield f"data: {json.dumps(chunk)}\n\n"
 
     except httpx.RequestError as exc:
-        yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+        logger.error("NeMo stream connection error: %s", exc)
+        yield 'data: {"error": "Upstream guardrails service unavailable"}\n\n'
 
     yield "data: [DONE]\n\n"
