@@ -1,0 +1,33 @@
+# LiteLLM proxy configuration
+# Routes the "shield-guarded" virtual model to nemo-proxy, and provides
+# direct access to Ollama models.
+
+model_list:
+  # Virtual model used by clients — routes through NeMo Guardrails
+  - model_name: shield-guarded
+    litellm_params:
+      model: openai/nemo-guarded
+      # LiteLLM appends /v1/chat/completions automatically; no /v1 suffix here.
+      api_base: http://nemo-proxy:8002
+      api_key: ${LITELLM_MASTER_KEY}
+
+  # Direct Ollama access (no guardrails) — for internal / trusted callers
+  - model_name: qwen2.5:7b-instruct
+    litellm_params:
+      model: ollama/qwen2.5:7b-instruct
+      api_base: http://ollama:11434
+
+  - model_name: fast
+    litellm_params:
+      model: ollama/qwen2.5:7b-instruct
+      api_base: http://ollama:11434
+
+general_settings:
+  master_key: ${LITELLM_MASTER_KEY}
+  # Allow proxy to talk to itself (nemo-proxy uses LiteLLM for model calls)
+  allow_requests_on_db_unavailable: true
+
+litellm_settings:
+  drop_params: true       # Ignore unknown params silently
+  success_callback: []
+  failure_callback: []
