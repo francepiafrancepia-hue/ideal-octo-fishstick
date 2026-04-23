@@ -9,6 +9,7 @@ volumes:
   redis-data:
   mlflow-data:
   grafana-data:
+  litellm-data:
 
 services:
   postgres:
@@ -161,3 +162,126 @@ services:
       - ml-network
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
+
+  # ---------------------------------------------------------------------------
+  # LiteLLM proxy — OpenAI-compatible gateway in front of Ollama
+  # ---------------------------------------------------------------------------
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.63.11-stable
+    container_name: ml-litellm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4000:4000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+      - litellm-data:/app/data
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--host", "0.0.0.0"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - ml-network
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # NeMo Guardrails server — applies input/output safety rails
+  # ---------------------------------------------------------------------------
+  nemo:
+    build:
+      context: ./nemo
+      dockerfile: Dockerfile
+    image: ml-nemo:latest
+    container_name: ml-nemo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    environment:
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - OPENAI_API_BASE=http://litellm:4000/v1
+      - NEMO_MODEL=${NEMO_MODEL:-ollama/qwen2.5:7b-instruct}
+      - LITELLM_URL=http://litellm:4000
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    volumes:
+      - ./nemo/config:/app/config:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - ml-network
+    depends_on:
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # NeMo proxy — OpenAI-compatible façade in front of NeMo Guardrails
+  # Registered as "shield-guarded" model in LiteLLM
+  # ---------------------------------------------------------------------------
+  nemo-proxy:
+    build:
+      context: ./nemo-proxy
+      dockerfile: Dockerfile
+    image: ml-nemo-proxy:latest
+    container_name: ml-nemo-proxy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8002:8002"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - ml-network
+    depends_on:
+      nemo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
